@@ -27,8 +27,8 @@ func main() {
 		shakespearean.HandleIncoming(w, r, incomingMetrics)
 	})
 
-	http.HandleFunc("/health", shakespearean.HealthEndPoint)
-	http.Handle("/metrics", promhttp.Handler())
+	mux.HandleFunc("/health", shakespearean.HealthEndPoint)
+	mux.Handle("/metrics", promhttp.Handler())
 	prometheus.MustRegister(incomingMetrics)
 
 	s := &http.Server{
