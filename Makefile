@@ -13,7 +13,8 @@ fmt:
 	@touch .tools
 
 test: .fmtcheck $(go_files)
-	go test -coverprofile=coverage.out -json ./... > testreport.json
+	#go test -coverprofile=coverage.out -json ./... > testreport.json
+	go test -coverprofile=coverage.out ./...
 
 build: test $(go_files)
 	CGO_ENABLED=0 go build -ldflags="-s -w" -o bin/app ./cmd/...

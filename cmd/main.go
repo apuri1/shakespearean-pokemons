@@ -1,15 +1,21 @@
 package main
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
 	"net/http"
-    "shakespeareanpokemons/shakespearean"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"shakespeareanpokemons/shakespearean"
+	"time"
 )
 
-//func usage() {
-//	log.Println("Args..")
-//}
+var (
+	incomingMetrics = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "shakespeare_requests",
+			Help: "Count of all requests",
+		}, []string{"status_code", "info"})
+)
 
 func main() {
 
@@ -17,11 +23,21 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/", shakespearean.PokemonRequest)
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		shakespearean.HandleIncoming(w, r, incomingMetrics)
+	})
 
 	http.HandleFunc("/health", shakespearean.HealthEndPoint)
 	http.Handle("/metrics", promhttp.Handler())
+	prometheus.MustRegister(incomingMetrics)
 
-	http.ListenAndServe(":5000", mux)
+	s := &http.Server{
+		Addr:         ":5000",
+		Handler:      mux,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+
+	log.Fatal(s.ListenAndServe())
 
 }
